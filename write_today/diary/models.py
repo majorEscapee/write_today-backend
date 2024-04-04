@@ -1,10 +1,11 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
-class Member(models.model):
+class Member(models.Model):
     name = models.CharField(max_length = 200)
     password = models.CharField(max_length = 200)
-    phone_number = models.PhoneNumberField(region = 'KR', unique = True)
+    phone_number = PhoneNumberField(region = 'KR', unique = True)
     email = models.EmailField(max_length=254)
     is_public = models.BooleanField(default = True)
 
@@ -12,16 +13,16 @@ class Member(models.model):
         return self
     
 
-class Friend(models.model):
-    sender = models.ForeignKey(Member, on_delete = models.CASCADE)
-    receiver = models.ForeignKey(Member, on_delete = models.CASCADE)
+class Friend(models.Model):
+    sender = models.ForeignKey(Member, related_name='sent_friend_requests', on_delete = models.CASCADE)
+    receiver = models.ForeignKey(Member, related_name='received_friend_requests', on_delete = models.CASCADE)
     friended = models.BooleanField(default = False)
     
     def __str__(self) :
         return self
     
 
-class Diary(models.model):
+class Diary(models.Model):
     writer = models.ForeignKey(Member, on_delete = models.CASCADE)
     contents = models.CharField(max_length = 200)
     created_date = models.DateTimeField()
@@ -30,7 +31,7 @@ class Diary(models.model):
         return self
 
 
-class Emotion(models.model):
+class Emotion(models.Model):
     name = models.CharField(max_length = 200)
     rate = models.CharField(max_length = 200)
     
@@ -38,7 +39,7 @@ class Emotion(models.model):
         return self
 
 
-class Color(models.model):
+class Color(models.Model):
     name = models.CharField(max_length = 200)
     hex = models.CharField(max_length = 200)
     
@@ -46,7 +47,7 @@ class Color(models.model):
         return self
 
 
-class Result(models.model):
+class Result(models.Model):
     diary = models.ForeignKey(Diary, on_delete = models.CASCADE)
     emotions = models.ForeignKey(Emotion, on_delete = models.CASCADE)
     # emotions는 list로 받아야 하는데 고려해야 하는 사항임
@@ -57,7 +58,7 @@ class Result(models.model):
         return self
 
 
-class Statistic(models.model):
+class Statistic(models.Model):
     results = models.ForeignKey(Emotion, on_delete = models.CASCADE)
     # results는 list로 받아야 하는데 고려해야 하는 사항임
     start_date = models.DateField()
@@ -67,7 +68,7 @@ class Statistic(models.model):
         return self
     
 
-class Achivement(models.model):
+class Achivement(models.Model):
     requirement = models.IntegerField()
     name = models.CharField(max_length = 200)
     summary = models.CharField(max_length = 200)
@@ -76,7 +77,7 @@ class Achivement(models.model):
         return self
     
 
-class Collection(models.model):
+class Collection(models.Model):
     member = models.ForeignKey(Member, on_delete = models.CASCADE)
     achivement = models.ForeignKey(Achivement, on_delete = models.CASCADE)
     collect_date = models.DateField()
@@ -86,7 +87,7 @@ class Collection(models.model):
         return self
     
 
-class Alert(models.model):
+class Alert(models.Model):
     member = models.ForeignKey(Member, on_delete = models.CASCADE)
     alert_contents = models.CharField(max_length = 200)
     alert_date = models.DateField()
