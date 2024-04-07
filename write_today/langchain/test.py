@@ -4,6 +4,8 @@ from langchain.chains import LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler # 출력 스트림 용도
 
+# LLAMA2는 더이상 ggmlv3 형식을 지원하지 않기 때문에 GGUF 형식을 사용해야 함 
+
 template = """Question: {question}
 
 Answer: Let's work this out in a step by step way to be sure we have the right answer."""
