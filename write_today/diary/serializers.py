@@ -9,7 +9,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # API 요청의 반환값을 JSON으로 직렬화하기 위함
-
+"""
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -42,25 +42,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user.set_password(validated_data['password'])
         user.save()
-
+"""
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = '__all__'
+        fields = ['id', 'name', 'email', 'is_public']
 
-        #fields = [''] = 포함할 필드 기입
+        # fields = [''] = 포함할 필드 기입
         # fields = '__all__' = 전체 필드 포함
         # exclude = [''] = 제외할 필드 기입
 
 class DiarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
-        fields = '__all__'
-
-class ResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Result
         fields = '__all__'
 
 class EmotionSerializer(serializers.ModelSerializer):
@@ -96,4 +91,13 @@ class CollectionSerializer(serializers.ModelSerializer):
 class AlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alert
+        fields = '__all__'
+
+class ResultSerializer(serializers.ModelSerializer):
+    diary = DiarySerializer()
+    color = ColorSerializer()
+    emotions = EmotionSerializer(many = True)
+    
+    class Meta:
+        model = Result
         fields = '__all__'

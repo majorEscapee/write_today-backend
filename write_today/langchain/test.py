@@ -8,7 +8,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler 
 
 template = """Question: {question}
 
-Answer: Let's work this out in a step by step way to be sure we have the right answer."""
+Answer: """
 
 prompt = PromptTemplate(template = template, input_variables = ["question"])
 
@@ -26,6 +26,6 @@ llm = LlamaCpp(
 llm_chain = LLMChain(prompt=prompt, llm=llm)
 
 prompt = """
-Question: Explain the Large Language Models.
+Question: 김치가 무엇인지 한글로 답변.
 """
 response = llm_chain.run(prompt)
