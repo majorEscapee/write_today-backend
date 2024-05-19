@@ -50,9 +50,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class MemberDataSerializer(serializers.ModelSerializer):
     
-    password = serializers.CharField(
-        min_length=6, write_only=True, required=True)
-    
     class Meta:
         model = Member
         fields = ['id', 'name', 'email', 'is_public', 'password', 'is_staff']

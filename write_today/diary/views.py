@@ -5,20 +5,27 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 
-from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert
+from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert, UserManager
 from .serializers import MemberSerializer, MemberTestSerializer, DiarySerializer, ResultSerializer
 
 
 class SignUp(generics.CreateAPIView):
-    queryset = Member.objects.all()
-    serializer_class = MemberTestSerializer
-    # 이메일 인증, 소셜 회원가입 등 추가 필요
+    def post(self, request):
+        email = request.data.get("email")
+        name = request.data.get("name")
+        password = request.data.get("password")
+        password_check = request.data.get("password_check")
+        phone_number = request.data.get("phone_number")
 
-    # def post(self, request, format=None):
-    #     serializer = MemberDataSerializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #     return Response(serializer.data, status=201)
+        if password != password_check:
+            return Response({"error": "password_check is not correct"}, status=400)
+
+        try:
+            user = Member.objects.create_user(email=email, name=name, phone_number=phone_number, password=password)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+        return Response({"msg": "User created successfully", "user": MemberSerializer(user).data}, status=201)
 
 class Login(generics.CreateAPIView):
     def post(self, request):
