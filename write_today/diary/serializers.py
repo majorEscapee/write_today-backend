@@ -44,14 +44,31 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 """
 
+        # fields = [''] = 포함할 필드 기입
+        # fields = '__all__' = 전체 필드 포함
+        # exclude = [''] = 제외할 필드 기입
+
+class MemberDataSerializer(serializers.ModelSerializer):
+    
+    password = serializers.CharField(
+        min_length=6, write_only=True, required=True)
+    
+    class Meta:
+        model = Member
+        fields = ['id', 'name', 'email', 'is_public', 'password', 'is_staff']
+
+        def create(self, validated_data):
+            return User.objects.create_user(**validated_data)
+
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = ['id', 'name', 'email', 'is_public']
 
-        # fields = [''] = 포함할 필드 기입
-        # fields = '__all__' = 전체 필드 포함
-        # exclude = [''] = 제외할 필드 기입
+class MemberTestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = '__all__'
 
 class DiarySerializer(serializers.ModelSerializer):
     class Meta:

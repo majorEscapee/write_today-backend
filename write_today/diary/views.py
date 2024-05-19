@@ -6,19 +6,25 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 
 from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert
-from .serializers import MemberSerializer, DiarySerializer, ResultSerializer
+from .serializers import MemberSerializer, MemberTestSerializer, DiarySerializer, ResultSerializer
 
 
 class SignUp(generics.CreateAPIView):
     queryset = Member.objects.all()
-    serializer_class = MemberSerializer
+    serializer_class = MemberTestSerializer
     # 이메일 인증, 소셜 회원가입 등 추가 필요
+
+    # def post(self, request, format=None):
+    #     serializer = MemberDataSerializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data, status=201)
 
 class Login(generics.CreateAPIView):
     def post(self, request):
-        username = request.data.get("email")
+        email = request.data.get("email")
         password = request.data.get("password")
-        user = authenticate(username=username, password=password)
+        user = authenticate(email=email, password=password)
         if user:
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)

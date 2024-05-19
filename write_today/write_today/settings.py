@@ -121,7 +121,7 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -138,3 +138,8 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://localhost:8000',
 ] # CORS 허용 URL
+
+AUTH_USER_MODEL = 'diary.Member'
+
+PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL' # Serializer Field 설정(Defulat=E164)
+PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)

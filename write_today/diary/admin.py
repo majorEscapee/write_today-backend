@@ -12,3 +12,5 @@ admin.site.register(Statistic)
 admin.site.register(Achivement)
 admin.site.register(Collection)
 admin.site.register(Alert)
+
+admin.ModelAdmin.search_fields = ('email',)
