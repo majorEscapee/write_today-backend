@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from phonenumber_field.modelfields import PhoneNumberField
 from django.core.validators import RegexValidator
 
 class UserManager(BaseUserManager):
@@ -31,6 +30,12 @@ class UserManager(BaseUserManager):
         member.is_staff = True
         member.save(using=self._db)
         return member
+    
+    def change_password(self, member, new_password):
+        member.set_password(new_password)
+        member.save(using=self._db)
+        return member
+
 
 class Member(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length = 100, null = False)
@@ -88,15 +93,17 @@ class Diary(models.Model):
     created_date = models.DateTimeField(auto_now = True)
 
     def __str__(self) :
-        return self.writer.name + " / " + self.created_date.strftime("%Y년 %m월 %d일 %H시 %M분")
+        return '{} / {}'.fotmat(
+            self.writer.name,
+            self.created_date.strftime("%Y년 %m월 %d일 %H시 %M분"),
+        )
 
 
 class Emotion(models.Model):
     name = models.CharField(max_length = 100, null = False)
-    rate = models.IntegerField()
-    
+
     def __str__(self) :
-        return self.name + str(self.rate)
+        self.name
 
 
 class Color(models.Model):
@@ -112,7 +119,7 @@ class Statistic(models.Model):
     end_date = models.DateField()
 
     def __str__(self) :
-        return str(self.start_date) + " ~ " + str(self.end_date)
+        return f"{str(self.start_date)} ~ {str(self.end_date)}"
 
 
 class Result(models.Model):
@@ -123,16 +130,31 @@ class Result(models.Model):
     statistic = models.ForeignKey(Statistic, on_delete = models.CASCADE, related_name="results")
 
     def __str__(self) :
-        return self.diary.writer.name + " / " +  self.diary.created_date.strftime("%Y년 %m월 %d일 %H시 %M분") + " / 결과"
+        return '{} / {}'.fotmat(
+            self.diary.writer.name,
+            self.diary.created_date.strftime("%Y년 %m월 %d일 %H시 %M분")
+        )
 
 
+class MixedEmotion(models.Model):
+    result  = models.ForeignKey(Result, on_delete=models.CASCADE)
+    emotion  = models.ForeignKey(Emotion, on_delete=models.CASCADE)
+    rate = models.IntegerField()
+
+    def __str__(self) :
+        return '{} / {} / {}'.fotmat(
+            self.result.diary,
+            self.emotion.name,
+            self.rate,
+        )
+    
 class Achivement(models.Model):
     requirement = models.IntegerField()
     name = models.CharField(max_length = 100, null = False)
     summary = models.TextField(null = False)
 
-    #def __str__(self) :
-    #    return self
+    def __str__(self) :
+        return self.name
     
 
 class Collection(models.Model):
@@ -141,11 +163,14 @@ class Collection(models.Model):
     collect_date = models.DateField()
     end_date = models.DateField()
 
-    #def __str__(self) :
-    #    return self
-    
+    def __str__(self) :
+        return f"{self.member.email} / {self.achivement.name}"
+
 
 class Alert(models.Model):
     member = models.ForeignKey(Member, on_delete = models.CASCADE)
     alert_contents = models.TextField(null = False)
     alert_date = models.DateField(auto_now_add = True)
+
+    def __str__(self) :
+        return f"{self.member.email} / {self.alert_contents}"
