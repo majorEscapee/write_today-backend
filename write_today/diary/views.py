@@ -12,6 +12,9 @@ from drf_yasg import openapi
 from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert, UserManager
 from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer 
 
+def admin_check(user):
+    if not user.is_staff:
+        return Response({"error": "관리자 권한 없음."}, status=403)
 
 class SignUp(generics.CreateAPIView):
     serializer_class = SignUpSerializer
@@ -44,13 +47,17 @@ class Login(generics.CreateAPIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
+        
+        if not user.is_active:
+            return Response({"error": "탈퇴된 회원."}, status=401)
+        
         if user:
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)
             return Response({"token": token.key}, status=201)
         else:
             #return Response({"error": "Invalid credentials"}, status=400)
-            return Response({"error": "로그인 실패."}, status=400)
+            return Response({"error": "로그인 실패."}, status=401)
 
 class Logout(generics.GenericAPIView):
     swagger_schema = None
@@ -80,10 +87,18 @@ class TokenTest(generics.GenericAPIView):
         else:  # 익명 사용자인 경우
             #return Response({"error": "User is not authenticated"}, status=401)
             return Response({"error": "회원 인증 실패."}, status=401)
-        
+
+""" 임시 """   
 class MemberList(generics.ListAPIView):
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
+
+class MemberDetailEmail(generics.RetrieveAPIView):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+    lookup_field = "email"
+
+""" """   
 
 class MemberDetail(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -97,11 +112,6 @@ class MemberDetail(generics.GenericAPIView):
         else:
             #return Response({"error": "User is not authenticated"}, status=401)
             return Response({"error": "회원 인증 실패."}, status=401)
-
-class MemberDetailEmail(generics.RetrieveAPIView):
-    queryset = Member.objects.all()
-    serializer_class = MemberSerializer
-    lookup_field = "email"
 
 class MemberExist(generics.GenericAPIView):
     serializer_class = MemberSerializer
@@ -160,18 +170,18 @@ class MemberQuit(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
-        logout(request)
         user = request.user
 
         if isinstance(user, Member):
             user.is_active = False
             user.save()
+            logout(request)
             # return Response({"message": "Successfully withdrawn from membership"}, status=200)
             return Response({"message": "회원 탈퇴 성공."}, status=200)
         
         else:
-            # return Response({"error": "token is invalid"}, status=404)
-             return Response({"error": "검증 실패."}, status=404)
+            # return Response({"error": "token is invalid"}, status=401)
+             return Response({"error": "검증 실패."}, status=401)
         
 
 class RequestFriend(generics.GenericAPIView):
@@ -196,10 +206,10 @@ class RequestFriend(generics.GenericAPIView):
                 return Response({"message": "친구 요청 성공."}, status=201)
             else:
                 # return Response({"error": "do not exist target"}, status=404)
-                return Response({"error": "상대방 회원 정보가 존재하지 않음."}, status=404)
+                return Response({"error": "상대방 회원 정보가 존재하지 않음."}, status=400)
         else:
             # return Response({"error": "token is invalid"}, status=404)
-            return Response({"error": "검증 실패"}, status=404)
+            return Response({"error": "검증 실패"}, status=401)
 
 
 class AcceptFriend(generics.GenericAPIView):
@@ -212,13 +222,15 @@ class AcceptFriend(generics.GenericAPIView):
             friend_id = request.data.get("friend_id")
             friend = Friend.objects.filter(id=friend_id).first()
             if isinstance(friend, Friend):
+                if friend.friended:
+                    return Response({"error": "이미 친구 관계임."}, status=400)
                 friend.friended = True
                 friend.save()
                 return Response({"message": "친구 요청 수락 성공."}, status=200)
             else:
-                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=404)
+                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=400)
         else:
-            return Response({"error": "검증 실패."}, status=404)
+            return Response({"error": "검증 실패."}, status=401)
         
     def delete(self, request):
         user = request.user
@@ -233,7 +245,7 @@ class AcceptFriend(generics.GenericAPIView):
                     friend.delete()
                     return Response({"message": "친구 요청 거절 성공."}, status=200)
             else:
-                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=404)
+                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=400)
         else:
             return Response({"error": "검증 실패."}, status=404)
 

@@ -6,13 +6,13 @@ urlpatterns = [
     path('signup', views.SignUp.as_view()),
     path('login', views.Login.as_view()),
     path('logout', views.Logout.as_view()),
+    path('member/exist/', views.MemberExist.as_view()),
 
     path('member/change_password/', views.ChangePassword.as_view()),
-    path('withdrawal', views.MemberQuit.as_view()),
+    path('member/withdrawal', views.MemberQuit.as_view()),
 
     path('members', views.MemberList.as_view()),
     path('member', views.MemberDetail.as_view()),
-    path('member/exist/', views.MemberExist.as_view()),
     path('member/<email>', views.MemberDetailEmail.as_view()), # PathParam
     path('member/change_state/', views.ChangeMemberState.as_view()),
 
