@@ -10,7 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert, UserManager
-from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer
+from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer 
 
 
 class SignUp(generics.CreateAPIView):
@@ -39,6 +39,7 @@ class SignUp(generics.CreateAPIView):
 
 class Login(generics.CreateAPIView):
     serializer_class = LoginSerializer
+    
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -60,9 +61,10 @@ class Logout(generics.GenericAPIView):
         token = Token.objects.filter(key = request.auth)
         token.delete()
         #return Response({"message": "Successfully logged out"}, status=201)
-        return Response({"message": "로그아웃 성공."}, status=201)
+        return Response({"message": "로그아웃 성공."}, status=200)
     
 class TokenTest(generics.GenericAPIView):
+    swagger_schema = None
     permission_classes = [IsAuthenticated] # 토큰 인증 필요
 
     def get(self, request):
@@ -119,6 +121,7 @@ class MemberExist(generics.GenericAPIView):
             return Response({"error": "이메일 누락."}, status=400)
 
 class ChangeMemberState(generics.GenericAPIView):
+    swagger_schema = None
     permission_classes = [IsAuthenticated] # 토큰 인증 필요
 
     def put(self, request):
@@ -128,13 +131,14 @@ class ChangeMemberState(generics.GenericAPIView):
             user.is_public = not state
             user.save()
             #return Response({"Successfully changed state : " : not state}, status=200)
-            return Response({"message : " : "상태 변경 성공 / " (not state)}, status=200)
+            return Response({"message : " : "상태 변경 성공 / " + str(not state)}, status=200)
         else:
             # return Response({"error": "Change State Err"}, status=401)
             return Response({"error": "상태 변경 실패."}, status=401)
 
 class ChangePassword(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated] # 토큰 인증 필요
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
 
     def put(self, request):
         user = request.user
@@ -152,7 +156,8 @@ class ChangePassword(generics.GenericAPIView):
 
 
 class MemberQuit(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated] # 토큰 인증 필요
+    swagger_schema = None
+    permission_classes = [IsAuthenticated]
 
     def put(self, request):
         logout(request)
@@ -171,20 +176,24 @@ class MemberQuit(generics.GenericAPIView):
 
 class RequestFriend(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = FriendRequestSerializer
 
     def post(self, request):
         user = request.user
         if isinstance(user, Member):
-            friend_email = request.data.get("email")
-            target = Member.objects.filter(email=friend_email).first()
+            receiver_email = request.data.get("receiver_email")
+            target = Member.objects.filter(email=receiver_email).first()
             if isinstance(target, Member):
-                friend = Friend.objects.create()
-                friend.sender = user
-                friend.receiver = target
-                friend.friended = False
+                if Friend.objects.filter(sender=user, receiver=target).exists() | Friend.objects.filter(sender=target, receiver=user).exists():
+                    return Response({"error": "이미 친구 관계가 존재함."}, status=400)
+                friend = Friend.objects.create(
+                    sender=user,
+                    receiver=target,
+                    friended=False
+                )
                 friend.save()
-                # return Response({"message": "send friend request"}, status=200)
-                return Response({"message": "친구 요청 성공."}, status=200)
+                # return Response({"message": "send friend request"}, status=201)
+                return Response({"message": "친구 요청 성공."}, status=201)
             else:
                 # return Response({"error": "do not exist target"}, status=404)
                 return Response({"error": "상대방 회원 정보가 존재하지 않음."}, status=404)
@@ -195,21 +204,55 @@ class RequestFriend(generics.GenericAPIView):
 
 class AcceptFriend(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = FriendAcceptSerializer
 
     def put(self, request):
         user = request.user
-        # Friend 테이블 조회
-        # 상태 변경
-        # 저장
+        if isinstance(user, Member):
+            friend_id = request.data.get("friend_id")
+            friend = Friend.objects.filter(id=friend_id).first()
+            if isinstance(friend, Friend):
+                friend.friended = True
+                friend.save()
+                return Response({"message": "친구 요청 수락 성공."}, status=200)
+            else:
+                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=404)
+        else:
+            return Response({"error": "검증 실패."}, status=404)
+        
+    def delete(self, request):
+        user = request.user
+        if isinstance(user, Member):
+            friend_id = request.data.get("friend_id")
+            friend = Friend.objects.filter(id=friend_id).first()
+            if isinstance(friend, Friend):
+                if friend.friended:
+                    friend.delete()
+                    return Response({"message": "친구 삭제 성공."}, status=200)
+                else:
+                    friend.delete()
+                    return Response({"message": "친구 요청 거절 성공."}, status=200)
+            else:
+                return Response({"error": "친구 신청 정보 존재하지 않음."}, status=404)
+        else:
+            return Response({"error": "검증 실패."}, status=404)
 
 
 class FriendList(generics.GenericAPIView):
+    serializer_class = FriendSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        # Friend 테이블 조회
-        # 리스트 리턴
+        if isinstance(user, Member):
+            friends = Friend.objects.filter(sender = user) | Friend.objects.filter(receiver = user)
+            if friends:
+                serializer = self.get_serializer(friends, many=True)
+                return Response(serializer.data, status=200)
+            else:
+                return Response({"error": "친구 정보 존재하지 않음."}, status=404)
+        else:
+            return Response({"error": "검증 실패."}, status=404)
 
 
 class DiaryList(generics.ListAPIView):

@@ -22,11 +22,6 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = ['id', 'name', 'email', 'is_public']
 
-class LoginSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Member
-        fields = ['email', 'password']
-
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
@@ -53,6 +48,9 @@ class StatisticSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class FriendSerializer(serializers.ModelSerializer):
+    sender = MemberSerializer()
+    receiver = MemberSerializer()
+
     class Meta:
         model = Friend
         fields = '__all__'
@@ -87,3 +85,21 @@ class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
         fields = '__all__'
+
+
+# Swagger Test Serializer
+
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = ['email', 'password']
+
+class ChangePasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(help_text="비밀번호")
+    new_password = serializers.CharField(help_text="새 비밀번호")
+
+class FriendRequestSerializer(serializers.Serializer):
+    receiver_email = serializers.CharField(help_text="상대방 이메일")
+
+class FriendAcceptSerializer(serializers.Serializer):
+    friend_id = serializers.CharField(help_text="친구 id")

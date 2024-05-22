@@ -124,7 +124,7 @@ class Statistic(models.Model):
 
 class Result(models.Model):
     diary = models.OneToOneField(Diary, on_delete = models.CASCADE)
-    emotions = models.ManyToManyField(Emotion) # 다대다로 변경
+    emotions = models.ManyToManyField(Emotion, through='MixedEmotion') # 다대다로 변경
     color = models.OneToOneField(Color, on_delete = models.SET_NULL, null=True)
     answer = models.TextField(null = False)
     statistic = models.ForeignKey(Statistic, on_delete = models.CASCADE, related_name="results")
@@ -141,6 +141,9 @@ class MixedEmotion(models.Model):
     emotion  = models.ForeignKey(Emotion, on_delete=models.CASCADE)
     rate = models.IntegerField()
 
+    class Meta : 
+        db_table = "mixed_emotion"
+    
     def __str__(self) :
         return '{} / {} / {}'.fotmat(
             self.result.diary,
@@ -148,6 +151,7 @@ class MixedEmotion(models.Model):
             self.rate,
         )
     
+
 class Achivement(models.Model):
     requirement = models.IntegerField()
     name = models.CharField(max_length = 100, null = False)
