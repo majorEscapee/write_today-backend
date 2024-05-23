@@ -287,3 +287,7 @@ class ResultDetail(generics.RetrieveAPIView):
     queryset = Result.objects.select_related("diary").all()
     serializer_class = ResultSerializer
     # 일기 상세 조회 = 결과도 조회
+
+""" 컬렉션 관련 로직 """
+""" 알림 관련 로직 """
+""" 색상 관련 로직 => 감정과 색상 테이블 합쳐야 할듯 """

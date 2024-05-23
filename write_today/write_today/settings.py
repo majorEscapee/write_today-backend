@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-5uvtw9c@&oq5vu@@=$3@t78r_ms8n)de-zr6nxz1k(2jr96095
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True # 개발 모드 / Fasle면 운영 모드
 
-ALLOWED_HOSTS = [ 'localhost', '127.0.0.1' ] # 운영 모드인 경우 반드시 서버 IP나 도메인 지정해야 함
+ALLOWED_HOSTS = [ 'localhost', '127.0.0.1', '*' ] # 운영 모드인 경우 반드시 서버 IP나 도메인 지정해야 함
 
 
 # Application definition
