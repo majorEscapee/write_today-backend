@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Member, Friend, Diary, Emotion, Color, Result, Statistic, Achivement, Collection, Alert, MixedEmotion
+from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MixedEmotion
 
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -37,10 +37,10 @@ class EmotionSerializer(serializers.ModelSerializer):
         model = Emotion
         fields = '__all__'
 
-class ColorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Color
-        fields = '__all__'
+# class ColorSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Color
+#         fields = '__all__'
 
 class StatisticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,9 +55,9 @@ class FriendSerializer(serializers.ModelSerializer):
         model = Friend
         fields = '__all__'
 
-class AchivementSerializer(serializers.ModelSerializer):
+class AchievementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Achivement
+        model = Achievement
         fields = '__all__'
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -71,19 +71,36 @@ class AlertSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MixedEmotionSerializer(serializers.ModelSerializer):
-    emotions = EmotionSerializer(many = True)
+    emotion = EmotionSerializer()
 
     class Meta:
         model = MixedEmotion
-        fields = '__all__'
+        fields = ['emotion', 'rate']
 
 class ResultSerializer(serializers.ModelSerializer):
     diary = DiarySerializer()
-    color = ColorSerializer()
-    mixed_emotion = MixedEmotionSerializer(many = True)
+    emotions = EmotionSerializer(many = True)
     
     class Meta:
         model = Result
+        fields = '__all__'
+
+class ResultDataSerializer(serializers.ModelSerializer):
+    mixed_emotion = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Result
+        fields = ['id', 'mixed_emotion', 'answer']
+
+    def get_mixed_emotion(self, obj):
+        mixed_emotions = MixedEmotion.objects.filter(result=obj)
+        return MixedEmotionSerializer(mixed_emotions, many=True).data
+
+class DiaryResultSerializer(serializers.ModelSerializer):
+    result = ResultDataSerializer()
+    
+    class Meta:
+        model = Diary
         fields = '__all__'
 
 

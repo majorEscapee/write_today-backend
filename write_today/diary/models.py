@@ -26,7 +26,7 @@ class UserManager(BaseUserManager):
         )
 
         #member.is_admin = True
-        #member.is_superuser = True
+        member.is_superuser = True
         member.is_staff = True
         member.save(using=self._db)
         return member
@@ -101,17 +101,18 @@ class Diary(models.Model):
 
 class Emotion(models.Model):
     name = models.CharField(max_length = 100, null = False)
-
-    def __str__(self) :
-        return self.name
-
-
-class Color(models.Model):
-    name = models.CharField(max_length = 100, null = False)
     hex = models.CharField(max_length = 100, null = False)
-    
+
     def __str__(self) :
         return self.name
+
+
+# class Color(models.Model):
+#     name = models.CharField(max_length = 100, null = False)
+#     hex = models.CharField(max_length = 100, null = False)
+    
+#     def __str__(self) :
+#         return self.name
 
 
 class Statistic(models.Model):
@@ -123,11 +124,11 @@ class Statistic(models.Model):
 
 
 class Result(models.Model):
-    diary = models.OneToOneField(Diary, on_delete = models.CASCADE)
+    diary = models.OneToOneField(Diary, on_delete = models.CASCADE, related_name="result")
     emotions = models.ManyToManyField(Emotion, through='MixedEmotion') # 다대다로 변경
-    color = models.OneToOneField(Color, on_delete = models.SET_NULL, null=True)
+    # color = models.OneToOneField(Color, on_delete = models.SET_NULL, null=True)
     answer = models.TextField(null = False)
-    statistic = models.ForeignKey(Statistic, on_delete = models.CASCADE, related_name="results")
+    statistic = models.ForeignKey(Statistic, on_delete=models.SET_NULL, null=True, related_name="results")
 
     def __str__(self) :
         return '{} / {}'.fotmat(
@@ -152,7 +153,7 @@ class MixedEmotion(models.Model):
         )
     
 
-class Achivement(models.Model):
+class Achievement(models.Model):
     requirement = models.IntegerField()
     name = models.CharField(max_length = 100, null = False)
     summary = models.TextField(null = False)
@@ -163,7 +164,7 @@ class Achivement(models.Model):
 
 class Collection(models.Model):
     member = models.ForeignKey(Member, on_delete = models.CASCADE)
-    achivement = models.ForeignKey(Achivement, on_delete = models.CASCADE)
+    achivement = models.ForeignKey(Achievement, on_delete = models.CASCADE)
     collect_date = models.DateField()
     end_date = models.DateField()
 
