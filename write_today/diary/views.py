@@ -281,6 +281,10 @@ class DiaryDetail(generics.GenericAPIView):
             return Response({"error": "일기 정보 존재하지 않음."}, status=400)
         
 
+class DiaryDetailPk(generics.RetrieveAPIView):
+    queryset = Result.objects.all()
+    serializer_class = DiaryResultSerializer
+
 # class WriteDiary(generics.CreateAPIView):
 #     queryset = Diary.objects.all()
 #     serializer_class = DiarySerializer
