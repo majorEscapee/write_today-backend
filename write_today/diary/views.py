@@ -66,10 +66,10 @@ class Login(generics.CreateAPIView):
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
         
-        if not user.is_active:
-            return Response({"error": "탈퇴된 회원."}, status=401)
-        
         if user:
+            if not user.is_active:
+                return Response({"error": "탈퇴된 회원."}, status=401)
+            
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)
             return Response({"token": token.key}, status=201)
