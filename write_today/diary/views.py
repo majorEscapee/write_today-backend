@@ -282,7 +282,7 @@ class DiaryDetail(generics.GenericAPIView):
         
 
 class DiaryDetailPk(generics.RetrieveAPIView):
-    queryset = Result.objects.all()
+    queryset = Diary.objects.all()
     serializer_class = DiaryResultSerializer
 
 # class WriteDiary(generics.CreateAPIView):
