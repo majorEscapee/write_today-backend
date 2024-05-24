@@ -90,7 +90,7 @@ class Friend(models.Model):
 class Diary(models.Model):
     writer = models.ForeignKey(Member, on_delete = models.CASCADE)
     contents = models.TextField(null = False)
-    created_date = models.DateTimeField(auto_now = True)
+    created_date = models.DateField(null = False, unique = True)
 
     def __str__(self) :
         return '{} / {}'.fotmat(
@@ -103,7 +103,7 @@ class Emotion(models.Model):
     name = models.CharField(max_length = 100, null = False)
 
     def __str__(self) :
-        self.name
+        return self.name
 
 
 class Color(models.Model):
