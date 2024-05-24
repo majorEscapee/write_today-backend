@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('diarys', views.DiaryList.as_view()),
     path('diary/', views.DiaryDetail.as_view()),
-    path('diary', views.DiaryDetailPk.as_view()),
+    path('diary/<pk>', views.DiaryDetailPk.as_view()),
     path('write', views.WriteDiary.as_view()),
     path('result/<pk>', views.ResultDetail.as_view()),
 
