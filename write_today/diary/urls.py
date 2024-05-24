@@ -20,7 +20,7 @@ urlpatterns = [
     path('friend/request', views.RequestFriend.as_view()),
     path('friend/accept/', views.AcceptFriend.as_view()),
 
-    path('diarys/<email>', views.DiaryList.as_view()),
+    path('diarys', views.DiaryList.as_view()),
     path('diary/', views.DiaryDetail.as_view()),
     path('write', views.WriteDiary.as_view()),
     path('result/<pk>', views.ResultDetail.as_view()),

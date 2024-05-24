@@ -22,11 +22,6 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = ['id', 'name', 'email', 'is_public']
 
-class SignUpSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Member
-        fields = ['email', 'password']
-
 class DiarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Diary
@@ -35,7 +30,7 @@ class DiarySerializer(serializers.ModelSerializer):
 class EmotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Emotion
-        fields = '__all__'
+        fields = ['name', 'hex']
 
 # class ColorSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -85,6 +80,13 @@ class ResultSerializer(serializers.ModelSerializer):
         model = Result
         fields = '__all__'
 
+""" custom serializer """
+
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = ['email', 'password']
+
 class ResultDataSerializer(serializers.ModelSerializer):
     mixed_emotion = serializers.SerializerMethodField()
 
@@ -104,7 +106,25 @@ class DiaryResultSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# Swagger Test Serializer
+class DiaryListSerializer(serializers.ModelSerializer):
+    hex = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Diary
+        fields = ['id', 'created_date', 'hex']
+
+    def get_hex(self, obj):
+        result = Result.objects.filter(diary=obj).first()
+        if result:
+            mixed_emotion = MixedEmotion.objects.filter(result=result).order_by('-rate').first()
+            if mixed_emotion:
+                return mixed_emotion.emotion.hex
+        return None
+
+
+
+""" Swagger Test Serializer """
+
 
 class LoginSerializer(serializers.ModelSerializer):
     class Meta:

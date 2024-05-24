@@ -11,7 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, UserManager
-from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer 
+from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer 
 
 def admin_check(user):
     if not user.is_staff:
@@ -252,10 +252,18 @@ class FriendList(generics.GenericAPIView):
 
 
 class DiaryList(generics.ListAPIView):
-    queryset = Diary.objects.all()
-    serializer_class = DiarySerializer
-    lookup_field = "email"
-    # 토큰 기반으로 조회하도록 변경하기
+    serializer_class = DiaryListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        validate_token(user)
+        diarys = Diary.objects.filter(writer = user)
+        if diarys:
+            serializer = self.get_serializer(diarys, many = True)
+            return Response(serializer.data, status=200)
+        else:
+            return Response({"error": "일기 정보 존재하지 않음."}, status=400)
 
 class DiaryDetail(generics.GenericAPIView):
     serializer_class = DiaryResultSerializer
