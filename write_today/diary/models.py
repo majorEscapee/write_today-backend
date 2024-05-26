@@ -54,7 +54,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         ],
     )
     email = models.EmailField(max_length = 254, unique = True)
-    is_public = models.BooleanField(default = True)
+    # is_public = models.BooleanField(default = True)
     created_date = models.DateTimeField(auto_now_add = True)
     
     is_active = models.BooleanField(default = True) # 탈퇴 여부
@@ -69,7 +69,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         return f"{self.name} / {self.email}"
     
     def get_full_name(self):
-        return '{} ({})'.fotmat(
+        return '{} ({})'.format(
             self.email,
             self.name,
         )
@@ -93,7 +93,7 @@ class Diary(models.Model):
     created_date = models.DateField(null = False, unique = True)
 
     def __str__(self) :
-        return '{} / {}'.fotmat(
+        return '{} / {}'.format(
             self.writer.name,
             self.created_date.strftime("%Y년 %m월 %d일 %H시 %M분"),
         )
@@ -104,15 +104,7 @@ class Emotion(models.Model):
     hex = models.CharField(max_length = 100, null = False)
 
     def __str__(self) :
-        return self.name
-
-
-# class Color(models.Model):
-#     name = models.CharField(max_length = 100, null = False)
-#     hex = models.CharField(max_length = 100, null = False)
-    
-#     def __str__(self) :
-#         return self.name
+        return f"{self.name} / {self.hex}"
 
 
 class Statistic(models.Model):
@@ -131,7 +123,7 @@ class Result(models.Model):
     statistic = models.ForeignKey(Statistic, on_delete=models.SET_NULL, null=True, related_name="results")
 
     def __str__(self) :
-        return '{} / {}'.fotmat(
+        return '{} / {}'.format(
             self.diary.writer.name,
             self.diary.created_date.strftime("%Y년 %m월 %d일 %H시 %M분")
         )
@@ -146,7 +138,7 @@ class MixedEmotion(models.Model):
         db_table = "mixed_emotion"
     
     def __str__(self) :
-        return '{} / {} / {}'.fotmat(
+        return '{} / {} / {}'.format(
             self.result.diary,
             self.emotion.name,
             self.rate,
@@ -154,7 +146,6 @@ class MixedEmotion(models.Model):
     
 
 class Achievement(models.Model):
-    requirement = models.IntegerField()
     name = models.CharField(max_length = 100, null = False)
     summary = models.TextField(null = False)
 
@@ -164,12 +155,23 @@ class Achievement(models.Model):
 
 class Collection(models.Model):
     member = models.ForeignKey(Member, on_delete = models.CASCADE)
-    achivement = models.ForeignKey(Achievement, on_delete = models.CASCADE)
+    achievement = models.ForeignKey(Achievement, on_delete = models.CASCADE)
     collect_date = models.DateField()
-    end_date = models.DateField()
 
     def __str__(self) :
         return f"{self.member.email} / {self.achivement.name}"
+    
+
+class MemberInfo(models.Model):
+    is_public = models.BooleanField(default = True, null = False)
+    member = models.OneToOneField(Member, related_name = 'infos', on_delete = models.CASCADE, null = False)
+    collection = models.OneToOneField(Collection, null = True, on_delete=models.SET_NULL)
+
+    class Meta : 
+        db_table = "member_info"
+    
+    def __str__(self) :
+        return f"{self.member.name} / {self.is_public} / {self.collection.achievement.name if self.collection else 'None'}"
 
 
 class Alert(models.Model):

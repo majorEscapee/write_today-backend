@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MixedEmotion
+from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MixedEmotion, MemberInfo
 
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -20,7 +20,7 @@ class MemberDataSerializer(serializers.ModelSerializer):
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = ['id', 'name', 'email', 'is_public']
+        fields = ['id', 'name', 'email']
 
 class DiarySerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,11 +31,6 @@ class EmotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Emotion
         fields = ['name', 'hex']
-
-# class ColorSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Color
-#         fields = '__all__'
 
 class StatisticSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,6 +75,14 @@ class ResultSerializer(serializers.ModelSerializer):
         model = Result
         fields = '__all__'
 
+class MemberInfoSerializer(serializers.ModelSerializer):
+    member = MemberSerializer()
+    collection = CollectionSerializer()
+
+    class Meta:
+        model = MemberInfo
+        fields = '__all__'
+
 """ custom serializer """
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -120,6 +123,51 @@ class DiaryListSerializer(serializers.ModelSerializer):
             if mixed_emotion:
                 return mixed_emotion.emotion.hex
         return None
+    
+
+class FriendInfoSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    is_public = serializers.SerializerMethodField()
+    last_color = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Member
+        fields = ['title', 'name', 'is_public', 'last_color']
+
+    def get_name(self, obj):
+        return obj.name
+
+    def get_title(self, obj):
+        member_info = MemberInfo.objects.filter(member=obj).first()
+        if member_info.collection and member_info.collection.achievement:
+            return member_info.collection.achievement.name
+        return None
+    
+    def get_is_public(self, obj):
+        member_info = MemberInfo.objects.filter(member=obj).first()
+        return member_info.is_public
+    
+    def get_last_color(self, obj):
+        diary = Diary.objects.filter(writer = obj).order_by('-created_date').first()
+        if diary:
+            result = Result.objects.filter(diary = diary).first()
+            if result:
+                mixed_emotion = MixedEmotion.objects.filter(result=result).order_by('-rate').first()
+                if mixed_emotion:
+                    return mixed_emotion.emotion.hex
+        else:
+            return None
+
+
+
+class FriendListSerializer(serializers.ModelSerializer):
+    sender = FriendInfoSerializer()
+    receiver = FriendInfoSerializer()
+
+    class Meta:
+        model = Friend
+        fields = '__all__'
 
 
 

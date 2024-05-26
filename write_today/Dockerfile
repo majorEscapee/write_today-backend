@@ -9,8 +9,8 @@ ADD . /srv/docker-server
 
 WORKDIR /srv/docker-server 
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# RUN pip install --upgrade pip
+# RUN pip install -r requirements_venv.txt
 
 EXPOSE 8000
 

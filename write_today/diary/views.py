@@ -10,8 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, UserManager
-from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer 
+from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MemberInfo
+from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
 
 def admin_check(user):
     if not user.is_staff:
@@ -53,6 +53,8 @@ class SignUp(generics.CreateAPIView):
         try:
             user = Member.objects.create_user(email=email, name=name, phone_number=phone_number, password=password)
             user.save()
+            user_info = MemberInfo.objects.create(member = user)
+            user_info.save()
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
@@ -144,10 +146,14 @@ class ChangeMemberState(generics.GenericAPIView):
     def put(self, request):
         user = request.user
         validate_token(user)
-        state = user.is_public
-        user.is_public = not state
-        user.save()
-        return Response({"message : " : "상태 변경 성공 / " + str(not state)}, status=200)
+        user_info = MemberInfo.objects.get(member = user)
+        if user_info:
+            state = user_info.is_public
+            user_info.is_public = not state
+            user_info.save()
+            return Response({"message : " : "상태 변경 성공 / " + str(not state)}, status=200)
+        else :
+            return Response({"error : " : "비정상적인 접근. "}, status=400)
 
 class ChangePassword(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -237,18 +243,20 @@ class AcceptFriend(generics.GenericAPIView):
 
 
 class FriendList(generics.GenericAPIView):
-    serializer_class = FriendSerializer
+    serializer_class = FriendListSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
         validate_token(user)
         friends = Friend.objects.filter(sender = user) | Friend.objects.filter(receiver = user)
-        if friends:
+        if friends.exists():
             serializer = self.get_serializer(friends, many=True)
             return Response(serializer.data, status=200)
         else:
             return Response({"error": "친구 정보 존재하지 않음."}, status=400)
+        
+    """ 만약 프로필 공개된 친구라면 색깔 + 수식어 보이도록 추가하기 ? """
 
 
 class DiaryList(generics.ListAPIView):
@@ -313,7 +321,6 @@ class WriteDiary(generics.CreateAPIView):
         user = request.user
         validate_token(user)
         contents = request.data.get("contents")
-        # 2024-05-24의 형식
         created_date = datetime.strptime(request.data.get("created_date"), '%Y-%m-%d').date()
         nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
         if (created_date > nowDate) :
@@ -334,6 +341,22 @@ class ResultDetail(generics.RetrieveAPIView):
     """
 
 """ 컬렉션 관련 로직 """
+
+class CollectionList(generics.GenericAPIView):
+    serializer_class = CollectionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        validate_token(user)
+        collections = Collection.objects.get(mebmer = user)
+        if collections:
+            serializer = self.get_serializer(collections, many = True)
+            return Response(serializer.data, status=201)
+        else:
+            return Response({"error": "컬렉션 정보 존재하지 않음."}, status=400)
+
+
 """ 알림 관련 로직 """
 
 
