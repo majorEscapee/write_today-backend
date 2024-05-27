@@ -308,7 +308,7 @@ class WriteDiary(generics.CreateAPIView):
         contents = request.data.get("contents")
         # 2024-05-24의 형식
         created_date = datetime.strptime(request.data.get("created_date"), '%Y-%m-%d').date()
-        nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
+        nowDate = datetime.now().date()
         if (created_date > nowDate) :
             return Response({"error": "미래 일기 작성 불가능."}, status=400)
         diary = Diary.objects.create(writer = user, contents = contents, created_date = created_date)  
@@ -322,7 +322,7 @@ class WriteDiary(generics.CreateAPIView):
         validate_token(user)
         contents = request.data.get("contents")
         created_date = datetime.strptime(request.data.get("created_date"), '%Y-%m-%d').date()
-        nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
+        nowDate = datetime.now().strftime('%Y-%m-%d')
         if (created_date > nowDate) :
             return Response({"error": "미래 일기 작성 불가능."}, status=400)
         diary = Diary.objects.get_or_create(writer = user, created_date = created_date)
