@@ -11,7 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MemberInfo
-from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
+from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendInfoSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
 
 def admin_check(user):
     if not user.is_staff:
@@ -151,7 +151,7 @@ class ChangeMemberState(generics.GenericAPIView):
             state = user_info.is_public
             user_info.is_public = not state
             user_info.save()
-            return Response({"message : " : "상태 변경 성공 / " + str(not state)}, status=200)
+            return Response({"message : " : str(not state)}, status=200)
         else :
             return Response({"error : " : "비정상적인 접근. "}, status=400)
 
@@ -166,6 +166,19 @@ class ChangePassword(generics.GenericAPIView):
         user = authenticate(email=user.email, password=password)
         validate_token(user)
         user = Member.objects.change_password(user, new_password)
+        user.save()
+        return Response({"message : " : "비밀번호 변경 성공."}, status=200)
+    
+
+class FindPassword(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+
+    def put(self, request):
+        email = request.data.get("email")
+        phone_number = request.data.get("phone_number")
+        new_password = request.data.get("new_password")
+        user = Member.objects.filter(email=email, phone_number=phone_number).first()
+        user.change_password(user, new_password)
         user.save()
         return Response({"message : " : "비밀번호 변경 성공."}, status=200)
 
@@ -349,10 +362,31 @@ class CollectionList(generics.GenericAPIView):
     def get(self, request):
         user = request.user
         validate_token(user)
-        collections = Collection.objects.get(mebmer = user)
+        collections = Collection.objects.filter(member = user)
         if collections:
             serializer = self.get_serializer(collections, many = True)
             return Response(serializer.data, status=201)
+        else:
+            return Response({"error": "컬렉션 정보 존재하지 않음."}, status=400)
+        
+
+class SetTitle(generics.GenericAPIView):
+    serializer_class = FriendInfoSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request, collection_id):
+        user = request.user
+        validate_token(user)
+        collection = Collection.objects.get(id = collection_id)
+        if collection:
+            user_info = MemberInfo.objects.get(member = user)
+            if user_info:
+                user_info.collection = collection
+                user_info.save()
+                serializer = self.get_serializer(user)
+                return Response(serializer.data, status=201)
+            else :
+                return Response({"error": "사용자 정보 존재하지 않음."}, status=400)
         else:
             return Response({"error": "컬렉션 정보 존재하지 않음."}, status=400)
 

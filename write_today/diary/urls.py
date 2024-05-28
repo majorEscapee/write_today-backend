@@ -9,6 +9,7 @@ urlpatterns = [
     path('member/exist/', views.MemberExist.as_view()),
 
     path('member/change_password/', views.ChangePassword.as_view()),
+    path('member/find_password/', views.FindPassword.as_view()),
     path('member/withdrawal', views.MemberQuit.as_view()),
 
     path('members', views.MemberList.as_view()),
@@ -25,6 +26,9 @@ urlpatterns = [
     path('diary/<pk>', views.DiaryDetailPk.as_view()),
     path('write', views.WriteDiary.as_view()),
     path('result/<pk>', views.ResultDetail.as_view()),
+
+    path('collections', views.CollectionList.as_view()),
+    path('title/<int:collection_id>', views.SetTitle.as_view()),
 
     path('tokentest', views.TokenTest.as_view()),
     

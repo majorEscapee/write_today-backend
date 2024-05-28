@@ -51,9 +51,11 @@ class AchievementSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CollectionSerializer(serializers.ModelSerializer):
+    achievement = AchievementSerializer()
+
     class Meta:
         model = Collection
-        fields = '__all__'
+        fields = ['id', 'achievement', 'collect_date']
 
 class AlertSerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,7 +170,6 @@ class FriendListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friend
         fields = '__all__'
-
 
 
 """ Swagger Test Serializer """
