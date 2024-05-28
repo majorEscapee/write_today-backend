@@ -36,6 +36,9 @@ class ManageAchivement():
     def achivement_check(self):
         return 0
 
+
+""" 회원 관련 로직 """
+
 class SignUp(generics.CreateAPIView):
     serializer_class = SignUpSerializer
     def post(self, request):
@@ -197,6 +200,8 @@ class MemberQuit(generics.GenericAPIView):
         return Response({"message": "회원 탈퇴 성공."}, status=200)
         
 
+""" 친구 관련 로직 """
+
 class RequestFriend(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FriendRequestSerializer
@@ -272,6 +277,8 @@ class FriendList(generics.GenericAPIView):
     """ 만약 프로필 공개된 친구라면 색깔 + 수식어 보이도록 추가하기 ? """
 
 
+""" 일기 관련 로직 """
+
 class DiaryList(generics.ListAPIView):
     serializer_class = DiaryListSerializer
     permission_classes = [IsAuthenticated]
@@ -306,10 +313,6 @@ class DiaryDetailPk(generics.RetrieveAPIView):
     queryset = Diary.objects.all()
     serializer_class = DiaryResultSerializer
 
-# class WriteDiary(generics.CreateAPIView):
-#     queryset = Diary.objects.all()
-#     serializer_class = DiarySerializer
-#     + 결과 추가 관련
 
 class WriteDiary(generics.CreateAPIView):
     serializer_class = DiarySerializer
@@ -392,10 +395,3 @@ class SetTitle(generics.GenericAPIView):
 
 
 """ 알림 관련 로직 """
-
-
-        # user_data = {
-        #     "name": user.name,
-        #     "email": user.email,
-        #     # 필요한 다른 사용자 정보 추가 가능
-        # }
