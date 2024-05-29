@@ -342,12 +342,16 @@ class WriteDiary(generics.CreateAPIView):
         nowDate = datetime.now().strftime('%Y-%m-%d')
         if (created_date > nowDate) :
             return Response({"error": "미래 일기 작성 불가능."}, status=400)
-        diary = Diary.objects.get_or_create(writer = user, created_date = created_date)
-        diary.contents = contents
-        diary.save()
-        serializer = self.get_serializer(diary)
-        # diary_result(1) > 결과 받아오기
-        return Response(serializer.data, status=201)
+        diary = Diary.objects.get(writer = user, created_date = created_date)
+        if diary :
+            diary.contents = contents
+            diary.save()
+            serializer = self.get_serializer(diary)
+            # diary_result(1) > 결과 받아오기
+            return Response(serializer.data, status=201)
+        else :
+            return Response({"error": "일기 데이터 없음."}, status=400)
+
 
 class ResultDetail(generics.RetrieveAPIView):
     queryset = Result.objects.select_related("diary").all()
