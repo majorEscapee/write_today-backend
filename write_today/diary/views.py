@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MemberInfo
+from .models import Member, Friend, Diary, Result, Achievement, Collection, Alert, MemberInfo
 from .serializers import MemberSerializer, MemberDataSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendInfoSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
 
 def admin_check(user):
