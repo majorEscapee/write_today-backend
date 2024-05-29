@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -338,19 +340,27 @@ class WriteDiary(generics.CreateAPIView):
         user = request.user
         validate_token(user)
         contents = request.data.get("contents")
-        created_date = datetime.strptime(request.data.get("created_date"), '%Y-%m-%d').date()
-        nowDate = datetime.now().strftime('%Y-%m-%d')
-        if (created_date > nowDate) :
+        created_date_str = request.data.get("created_date")
+
+        try:
+            created_date = datetime.strptime(created_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"error": "잘못된 날짜 형식입니다. 'YYYY-MM-DD' 형식으로 입력하십시오."}, status=400)
+        
+        now_date = datetime.now().date()
+        if created_date > now_date:
             return Response({"error": "미래 일기 작성 불가능."}, status=400)
-        diary = Diary.objects.get(writer = user, created_date = created_date)
-        if diary :
-            diary.contents = contents
-            diary.save()
-            serializer = self.get_serializer(diary)
-            # diary_result(1) > 결과 받아오기
-            return Response(serializer.data, status=201)
-        else :
+        
+        try:
+            diary = Diary.objects.get(writer=user, created_date=created_date)
+        except ObjectDoesNotExist:
             return Response({"error": "일기 데이터 없음."}, status=400)
+        
+        diary.contents = contents
+        diary.save()
+        serializer = self.get_serializer(diary)
+        # diary_result(1) > 결과 받아오기
+        return Response(serializer.data, status=201)
 
 
 class ResultDetail(generics.RetrieveAPIView):
