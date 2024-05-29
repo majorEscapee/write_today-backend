@@ -13,9 +13,24 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
     # exclude = [''] = 제외할 필드 기입
 
 class MemberDataSerializer(serializers.ModelSerializer):
+    is_public = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+
     class Meta:
         model = Member
-        fields = '__all__'
+        fields = ['id', 'name', 'email', 'is_public', 'title']
+
+    def get_is_public(self, obj):
+        user_info = MemberInfo.objects.get(member = obj)
+        if user_info:
+            return user_info.is_public
+        return None
+    
+    def get_title(self, obj):
+        user_info = MemberInfo.objects.get(member = obj)
+        if user_info and user_info.collection:
+            return user_info.collection.achievement.name
+        return None
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:

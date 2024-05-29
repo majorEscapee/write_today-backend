@@ -11,7 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import Member, Friend, Diary, Emotion, Result, Statistic, Achievement, Collection, Alert, MemberInfo
-from .serializers import MemberSerializer, LoginSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendInfoSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
+from .serializers import MemberSerializer, MemberDataSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendInfoSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
 
 def admin_check(user):
     if not user.is_staff:
@@ -64,7 +64,7 @@ class SignUp(generics.CreateAPIView):
         return Response({"message": "회원가입 성공.", "user": MemberSerializer(user).data}, status=201)
 
 class Login(generics.CreateAPIView):
-    serializer_class = LoginSerializer
+    serializer_class = MemberDataSerializer
     
     def post(self, request):
         email = request.data.get("email")
@@ -77,7 +77,8 @@ class Login(generics.CreateAPIView):
             
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=201)
+            serializer = self.get_serializer(user)
+            return Response({"token": token.key, "member" : serializer.data}, status=201)
         else:
             return Response({"error": "로그인 실패."}, status=401)
 
