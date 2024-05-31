@@ -270,14 +270,17 @@ class FriendList(generics.GenericAPIView):
     def get(self, request):
         user = request.user
         validate_token(user)
-        friends = Friend.objects.filter(sender = user) | Friend.objects.filter(receiver = user)
-        if friends.exists():
-            serializer = self.get_serializer(friends, many=True)
-            return Response(serializer.data, status=200)
-        else:
-            return Response({"error": "친구 정보 존재하지 않음."}, status=400)
+
+        friend_sender = Friend.objects.filter(sender=user)
+        friend_receiver = Friend.objects.filter(receiver=user)
+
+        friends = friend_sender | friend_receiver
+
+        serializer = self.get_serializer(friends, many=True, context={'request': request})
         
-    """ 만약 프로필 공개된 친구라면 색깔 + 수식어 보이도록 추가하기 ? """
+        if friends.exists():
+            return Response(serializer.data, status=200)
+        return Response({"error": "친구 정보 존재하지 않음."}, status=400)
 
 
 """ 일기 관련 로직 """

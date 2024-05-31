@@ -179,12 +179,19 @@ class FriendInfoSerializer(serializers.ModelSerializer):
 
 
 class FriendListSerializer(serializers.ModelSerializer):
-    sender = FriendInfoSerializer()
-    receiver = FriendInfoSerializer()
+    friend = serializers.SerializerMethodField()
+    friended = serializers.BooleanField()
 
     class Meta:
         model = Friend
-        fields = '__all__'
+        fields = ['friend', 'friended']
+
+    def get_friend(self, obj):
+        user = self.context['request'].user
+        if obj.sender == user:
+            return FriendInfoSerializer(obj.receiver).data
+        else:
+            return FriendInfoSerializer(obj.sender).data
 
 
 """ Swagger Test Serializer """
