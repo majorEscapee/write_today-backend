@@ -13,7 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .models import Member, Friend, Diary, Result, Achievement, Collection, Alert, MemberInfo
-from .serializers import MemberSerializer, MemberDataSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendInfoSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, FriendListSerializer, CollectionSerializer
+from .serializers import MemberSerializer, MemberDataSerializer, DiarySerializer, ResultSerializer, SignUpSerializer, FriendRequestSerializer, FriendAcceptSerializer, ChangePasswordSerializer, DiaryResultSerializer, DiaryListSerializer, CollectionSerializer, TitleSerializer, FriendInfoSerializer
 
 def admin_check(user):
     if not user.is_staff:
@@ -264,7 +264,7 @@ class AcceptFriend(generics.GenericAPIView):
 
 
 class FriendList(generics.GenericAPIView):
-    serializer_class = FriendListSerializer
+    serializer_class = FriendInfoSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -274,11 +274,18 @@ class FriendList(generics.GenericAPIView):
         friend_sender = Friend.objects.filter(sender=user)
         friend_receiver = Friend.objects.filter(receiver=user)
 
-        friends = friend_sender | friend_receiver
+        friends = []
+        for friend in friend_sender:
+            friend.receiver.friended = friend.friended
+            friends.append(friend.receiver)
+
+        for friend in friend_receiver:
+            friend.sender.friended = friend.friended
+            friends.append(friend.sender)
 
         serializer = self.get_serializer(friends, many=True, context={'request': request})
         
-        if friends.exists():
+        if friends:
             return Response(serializer.data, status=200)
         return Response({"error": "친구 정보 존재하지 않음."}, status=400)
 
@@ -392,7 +399,7 @@ class CollectionList(generics.GenericAPIView):
         
 
 class SetTitle(generics.GenericAPIView):
-    serializer_class = FriendInfoSerializer
+    serializer_class = TitleSerializer
     permission_classes = [IsAuthenticated]
     
     def put(self, request, collection_id):

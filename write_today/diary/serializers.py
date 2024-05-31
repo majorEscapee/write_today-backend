@@ -141,8 +141,7 @@ class DiaryListSerializer(serializers.ModelSerializer):
                 return mixed_emotion.emotion.hex
         return None
     
-
-class FriendInfoSerializer(serializers.ModelSerializer):
+class TitleSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     is_public = serializers.SerializerMethodField()
@@ -176,22 +175,41 @@ class FriendInfoSerializer(serializers.ModelSerializer):
         else:
             return None
 
-
-
-class FriendListSerializer(serializers.ModelSerializer):
-    friend = serializers.SerializerMethodField()
+class FriendInfoSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    is_public = serializers.SerializerMethodField()
+    last_color = serializers.SerializerMethodField()
     friended = serializers.BooleanField()
 
     class Meta:
-        model = Friend
-        fields = ['friend', 'friended']
+        model = Member
+        fields = ['title', 'name', 'is_public', 'last_color', 'friended']
 
-    def get_friend(self, obj):
-        user = self.context['request'].user
-        if obj.sender == user:
-            return FriendInfoSerializer(obj.receiver).data
+    def get_name(self, obj):
+        return obj.name
+
+    def get_title(self, obj):
+        member_info = MemberInfo.objects.filter(member=obj).first()
+        if member_info.collection and member_info.collection.achievement:
+            return member_info.collection.achievement.name
+        return None
+    
+    def get_is_public(self, obj):
+        member_info = MemberInfo.objects.filter(member=obj).first()
+        return member_info.is_public
+    
+    def get_last_color(self, obj):
+        diary = Diary.objects.filter(writer = obj).order_by('-created_date').first()
+        if diary:
+            result = Result.objects.filter(diary = diary).first()
+            if result:
+                mixed_emotion = MixedEmotion.objects.filter(result=result).order_by('-rate').first()
+                if mixed_emotion:
+                    return mixed_emotion.emotion.hex
         else:
-            return FriendInfoSerializer(obj.sender).data
+            return None
+
 
 
 """ Swagger Test Serializer """
